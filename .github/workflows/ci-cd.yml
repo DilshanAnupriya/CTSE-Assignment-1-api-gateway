@@ -6,11 +6,11 @@ on:
       - main
 
 env:
-  AWS_REGION: eu-north-1                        # ← change to your region
-  ECR_REPOSITORY: api-gateway                    # ← your ECR repo name
-  ECS_CLUSTER: vehicle-cluster                # ← your ECS cluster name
-  ECS_SERVICE: api-gateway-service               # ← your ECS service name
-  CONTAINER_NAME: api-gateway                    # ← container name in task def
+  AWS_REGION: eu-north-1
+  ECR_REPOSITORY: api-gateway
+  ECS_CLUSTER: vehicle-cluster
+  ECS_SERVICE: api-gateway-service
+  CONTAINER_NAME: api-gateway
 
 jobs:
   deploy:
@@ -18,11 +18,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # ── 1. Checkout code ────────────────────────────────────────────────────
       - name: Checkout
         uses: actions/checkout@v4
 
-      # ── 2. Configure AWS credentials ────────────────────────────────────────
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -30,12 +28,10 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
 
-      # ── 3. Login to Amazon ECR ───────────────────────────────────────────────
       - name: Login to Amazon ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
 
-      # ── 4. Build, tag & push Docker image ───────────────────────────────────
       - name: Build, tag, and push image to ECR
         id: build-image
         env:
@@ -46,15 +42,15 @@ jobs:
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
           echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
 
-      # ── 5. Download current ECS task definition ──────────────────────────────
+      # ── 5. Download & clean task definition ─────────────────────────────────
       - name: Download task definition
         run: |
           aws ecs describe-task-definition \
             --task-definition api-gateway \
             --query taskDefinition \
+            | jq 'del(.enableFaultInjection, .taskDefinitionArn, .revision, .status, .requiresAttributes, .placementConstraints, .compatibilities, .registeredAt, .registeredBy)' \
             > task-definition.json
 
-      # ── 6. Update image in task definition ──────────────────────────────────
       - name: Fill in the new image ID in the task definition
         id: task-def
         uses: aws-actions/amazon-ecs-render-task-definition@v1
@@ -63,7 +59,6 @@ jobs:
           container-name: ${{ env.CONTAINER_NAME }}
           image: ${{ steps.build-image.outputs.image }}
 
-      # ── 7. Deploy to ECS ─────────────────────────────────────────────────────
       - name: Deploy Amazon ECS task definition
         uses: aws-actions/amazon-ecs-deploy-task-definition@v1
         with:
