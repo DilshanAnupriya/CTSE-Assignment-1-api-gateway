@@ -11,6 +11,13 @@ public class GatewayConfig {
     public RouteLocator routeLocator(RouteLocatorBuilder builder) {
         return builder.routes()
                 .route("car-rental-vehicle-service-api",p -> p.path("/api/v1/vehicles/**")
-                        .uri("lb://car-rental")).build();
+                        .uri("lb://car-rental"))
+                .route("car-rental-booking-service-api",p -> p.path("/api/bookings/**")
+                        .uri("lb://booking-service"))
+                .route("car-rental-customer-service-api",p -> p.path("/customers/**")
+                        .uri("lb://customer-service"))
+                .route("car-rental-payment-service-api",p -> p.path("/payments/**")
+                        .uri("lb://paymentService"))
+                .build();
     }
 }
