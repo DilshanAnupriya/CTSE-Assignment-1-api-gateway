@@ -1,4 +1,4 @@
-package config;
+package com.Car_rental.api_gateway.api_gateway.config;
 
 import org.springframework.cloud.gateway.route.RouteLocator;
 import org.springframework.cloud.gateway.route.builder.RouteLocatorBuilder;
@@ -11,6 +11,6 @@ public class GatewayConfig {
     public RouteLocator routeLocator(RouteLocatorBuilder builder) {
         return builder.routes()
                 .route("car-rental-vehicle-service-api",p -> p.path("/api/v1/vehicles/**")
-                        .uri("http://localhost:8081")).build();
+                        .uri("lb://CAR_RENTAL")).build();
     }
 }

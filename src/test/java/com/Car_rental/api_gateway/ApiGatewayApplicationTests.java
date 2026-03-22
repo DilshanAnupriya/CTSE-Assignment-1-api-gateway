@@ -1,4 +1,4 @@
-package com.Car_rental.api_gateway;
+package com.Car_rental;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
